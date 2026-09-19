@@ -29,5 +29,7 @@
       "Update my local conversation archive.",
       "Create my end-of-day task index."
     ]
-  }
+  },
+  "repository": "https://github.com/mgritzbach/codex-recall",
+  "homepage": "https://github.com/mgritzbach/codex-recall"
 }

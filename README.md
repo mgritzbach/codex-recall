@@ -21,7 +21,7 @@ Running the Python commands yourself uses zero model tokens. Asking Codex to run
 
 Requirements: Python 3.10 or newer with SQLite FTS5, local Codex JSONL history, and disk space for a text archive and search index. Windows, macOS and Linux code paths are included. See the validation notes before claiming platform coverage.
 
-Download or clone this repository, open a terminal in its directory, and run:
+Download this repository, open a terminal in its directory, and run:
 
 ```text
 python scripts/install.py
@@ -101,7 +101,7 @@ Each `tasks/<task-id>.md` contains:
 - Your request text and Codex's visible answer text, preserving wording and Markdown.
 - The recorded timestamp with timezone and weekday for each message. Unknown timestamps are labeled.
 
-It excludes tool calls/results, hidden reasoning, system/developer prompts, binary attachments, image payloads and subagent tasks. Text inside an attached document is not extracted. A text-only request accompanying an image is retained. Project names come from Codex metadata; missing names are labeled instead of inferred from directory names.
+It excludes tool calls/results, hidden reasoning, system/developer prompts, binary attachments, image payloads and subagent tasks. Text inside an attached document is not extracted by the chat recorder; use the optional file index for selected documents. A text-only request accompanying an image is retained. Project names come from Codex metadata; missing names are labeled instead of inferred from directory names.
 
 Modern display events are preferred because model-input records can contain injected context. Older user/agent events are supported. A response-only fallback is supported with a visible coverage warning and conservative filtering. Unsupported or corrupt records are reported; the tool does not pretend an incomplete export is complete. Read `docs/architecture.md` for boundaries.
 
