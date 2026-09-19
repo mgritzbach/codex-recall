@@ -35,13 +35,14 @@ class RecallTests(unittest.TestCase):
     def run_sync(self):return r.sync(self.home,self.root)
     def read(self):return (self.root/'tasks'/f'{ID}.md').read_text(encoding='utf-8')
 
-    def test_only_requests_and_final_answers(self):
+    def test_requests_and_all_visible_answers(self):
         self.append(event('AgentMessage','PROGRESS_SECRET','c1','commentary'))
         self.append({'type':'response_item','payload':{'type':'message','role':'developer','content':[{'type':'input_text','text':'SYSTEM_SECRET'}]}})
         self.append({'type':'response_item','payload':{'type':'function_call_output','output':'TOOL_SECRET'}})
         self.append({'type':'response_item','payload':{'type':'reasoning','summary':'REASONING_SECRET'}})
         self.run_sync();text=self.read()
-        for x in ['PROGRESS_SECRET','SYSTEM_SECRET','TOOL_SECRET','REASONING_SECRET']:self.assertNotIn(x,text)
+        self.assertIn('PROGRESS_SECRET',text)
+        for x in ['SYSTEM_SECRET','TOOL_SECRET','REASONING_SECRET']:self.assertNotIn(x,text)
         self.assertIn('Saturday',text);self.assertIn('2026-09-19',text)
         self.assertIn('Use separate refresh tokens.',text)
 

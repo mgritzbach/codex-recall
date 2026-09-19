@@ -12,4 +12,4 @@ Reviewed on 2026-09-19. Popularity is not evidence of correctness. These are est
 
 This implementation deliberately uses no network service, embeddings, mandatory model calls or broad session-start prompt injection. The README explains the user-facing outcome and installation. The skill loads only for history tasks. Detailed operational information lives in docs. Runtime history stays outside the repository.
 
-The shareable release contains code, synthetic tests and documentation only. A public GitHub repository has not been created by this package. A maintainer can publish the source, run the supplied CI, tag a release and distribute the release ZIP. No fabricated repository URL is included in the manifest.
+The shareable release contains code, synthetic tests and documentation only. Private conversation exports and file caches stay outside the repository. Releases include a version tag and source ZIP.

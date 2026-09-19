@@ -2,9 +2,9 @@
 
 Find the conversation you remember, even when you cannot remember its title.
 
-Codex Recall keeps a local Markdown archive of your requests and Codex's final answers. Search it with a fast Python word search, or let Codex interpret a small set of matches when you choose AI-assisted search. Results include links that open the original task, including archived tasks on supported Codex desktop builds.
+Codex Recall keeps a local Markdown archive of your requests and Codex's visible answers. Search it with a fast Python word search, or let Codex interpret a small set of matches when you choose AI-assisted search. Results include links that open the original task, including archived tasks on supported Codex desktop builds.
 
-**No API key. No model needed for recording. No Python packages to install. No automatic uploads.**
+**No API key. No model needed for recording. Core features use only the Python standard library. No automatic uploads.**
 
 ## Choose your search budget
 
@@ -98,12 +98,42 @@ Search does not silently refresh the archive. Check `last_sync`, run `sync` if n
 Each `tasks/<task-id>.md` contains:
 
 - The task name, project, task ID, archived status and original task link.
-- Your request text and Codex's final answer text, preserving wording and Markdown.
+- Your request text and Codex's visible answer text, preserving wording and Markdown.
 - The recorded timestamp with timezone and weekday for each message. Unknown timestamps are labeled.
 
-It excludes progress commentary, tool calls/results, hidden reasoning, system/developer prompts, binary attachments, image payloads and subagent tasks. Text inside an attached document is not extracted. A text-only request accompanying an image is retained. Project names come from Codex metadata; missing names are labeled instead of inferred from directory names.
+It excludes tool calls/results, hidden reasoning, system/developer prompts, binary attachments, image payloads and subagent tasks. Text inside an attached document is not extracted. A text-only request accompanying an image is retained. Project names come from Codex metadata; missing names are labeled instead of inferred from directory names.
 
 Modern display events are preferred because model-input records can contain injected context. Older user/agent events are supported. A response-only fallback is supported with a visible coverage warning and conservative filtering. Unsupported or corrupt records are reported; the tool does not pretend an incomplete export is complete. Read `docs/architecture.md` for boundaries.
+
+Version 0.2 includes visible intermediate answers, including progress text, so substantive findings are not lost. If upgrading from 0.1, run `sync --rebuild` once to backfill them.
+
+## Advanced: selected file contents
+
+File indexing is **off by default**, with a separate opt-in for AI summaries. You choose the files or folder scope. Nothing scans your disk automatically.
+
+```text
+python skills/codex-recall/scripts/recall.py files enable
+python skills/codex-recall/scripts/recall.py files add "/selected/report.md" --task TASK_ID
+python skills/codex-recall/scripts/recall.py files add "/selected/folder" --recursive
+python skills/codex-recall/scripts/recall.py search "observatory"
+python skills/codex-recall/scripts/recall.py files status
+```
+
+Replace the path and optional task ID with actual values. Basic mode extracts text, headings, frequent keywords and a labeled extractive lead summary locally. Supported formats are UTF-8 TXT, Markdown, RST, CSV, JSON, YAML, HTML, DOCX and PPTX. PDF text extraction requires the optional `pypdf` package; it is never installed automatically. Scanned PDFs and images need OCR, which is not included. XLSX and legacy binary Office formats are not supported in this release.
+
+Normal `sync`, the after-request hook and `end-day` refresh registered files when indexing is enabled. Unchanged files are skipped using size and modification time; changed files are hashed. Matching content in the same extraction format is reused across paths and tasks. A deliberately edited file that preserves both size and timestamp can evade that shortcut; remove and re-add its registration to force another read. Folder registration selects existing files, not future files.
+
+AI summaries use your current Codex conversation, with your consent. `files ai-on` permits the skill to summarize a bounded excerpt and save a cached summary and keywords. It does not launch an AI service. Background maintenance never uses a model. Changed file content invalidates its old summary. The skill's detailed procedure is in `skills/codex-recall/references/files.md`.
+
+Limits: 5 MB per file, 200 supported files per folder registration, 20 MB of expanded Office XML, 300 PDF pages and 200,000 extracted characters per file. Large text is marked truncated. Search returns task links only for explicit task associations, and unassociated files are still searchable globally. File results support project/archive filters through those associations; `--since` currently limits results to conversations.
+
+```text
+python skills/codex-recall/scripts/recall.py files disable
+python skills/codex-recall/scripts/recall.py files ai-off
+python skills/codex-recall/scripts/recall.py files remove "/selected/report.md"
+```
+
+Disabling retains the private cache but hides file results. Removing a registration purges its extracted content and summary when no other file references that content. Original files are never modified. File caches live alongside the private chat archive, outside this repository.
 
 ## Storage and efficiency
 

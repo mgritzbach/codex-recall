@@ -1,3 +1,7 @@
+# Validation for 0.2.0
+
+40 synthetic tests passed locally on Windows with Python 3.14, including optional file indexing, cache reuse, stale-summary invalidation, opt-in checks, task associations, filename and fuzzy matching, size limits and format extraction. Skill, plugin and package validators passed. File indexing remains off until explicitly enabled and scoped. AI summaries are implemented as a consent-based Codex workflow, not an automatic model service.
+
 # Validation for 0.1.0
 
 Executed locally on Windows with Python 3.14 on 2026-09-19.

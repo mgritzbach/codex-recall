@@ -9,7 +9,7 @@ Quick search queries SQLite. AI-assisted search is a bounded workflow in the ski
 ## Supported inputs
 
 - `session_meta` establishes identity, working directory and source.
-- Modern `event_msg/item_completed` records with `UserMessage` and `AgentMessage` items are preferred. Case variants are accepted. Only final or unspecified answer phases are retained.
+- Modern `event_msg/item_completed` records with `UserMessage` and `AgentMessage` items are preferred. Case variants are accepted. Final, commentary and unspecified visible answer phases are retained; analysis is excluded.
 - Legacy `event_msg/user_message` and `event_msg/agent_message` are the next choice.
 - `response_item/message` is a last resort. Known injected user-context wrappers are removed, and a warning marks this less reliable schema. Developer/system roles, tools and reasoning never enter the archive.
 - One schema family is selected per file to avoid duplicate representations of the same turn. An upgrade to a stronger family triggers a rebuild of that task.

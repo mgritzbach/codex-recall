@@ -17,9 +17,12 @@ import sys
 import time
 import uuid
 
-VERSION = '0.1.0'
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import file_index
+
+VERSION = '0.2.0'
 SCHEMA = 2
-FINAL = {None, '', 'final', 'final_answer'}
+FINAL = {None, '', 'final', 'final_answer', 'commentary'}
 ID_RE = re.compile(r'[a-zA-Z0-9_-]{1,100}\Z')
 STOPWORDS = set('a an the is are was were i we you my our me to of in on for with and or find search chat task where about that it discussed'.split())
 
@@ -268,7 +271,7 @@ def render_task(db, root, task_id):
     db.execute('UPDATE tasks SET dirty=0 WHERE id=?', (task_id,))
 
 
-def sync(home, root, only=None):
+def sync(home, root, only=None, rebuild=False):
     started = time.monotonic(); report = {'files_checked':0,'files_changed':0,'bytes_read':0,'messages_added':0,'warnings':[]}
     with writer_lock(root):
         db = connect(root)
@@ -315,10 +318,10 @@ def sync(home, root, only=None):
                 cwd = info.get('cwd') or sm.get('cwd') or (previous['cwd'] if previous else '')
                 archived = int(info.get('archived', 'archived_sessions' in path.parts))
                 meta_changed = not previous or str(path) != previous['source_path'] or (title,project,cwd,archived) != tuple(previous[x] for x in ('title','project','cwd','archived'))
-                changed = not previous or stat.st_size != previous['size'] or stat.st_mtime_ns != previous['mtime']
+                changed = rebuild or not previous or stat.st_size != previous['size'] or stat.st_mtime_ns != previous['mtime']
                 if not changed and not meta_changed and (root/'tasks'/f'{ident}.md').exists(): continue
                 offset = previous['offset'] if previous else 0
-                reset = bool(previous and (stat.st_size < offset or anchor(path, offset) != previous['anchor']
+                reset = bool(previous and (rebuild or stat.st_size < offset or anchor(path, offset) != previous['anchor']
                              or (stat.st_size == previous['size'] and stat.st_mtime_ns != previous['mtime'])))
                 if reset: offset = 0
                 items, sm_tail, problems, end, nbytes = read_tail(path, offset) if changed else ([],{},[],offset,0)
@@ -369,6 +372,9 @@ def sync(home, root, only=None):
             report['warnings'] = list(dict.fromkeys(report['warnings'] +
                 [r['id']+': '+r['problem'] for r in db.execute("SELECT id,problem FROM tasks WHERE problem!=''")]))
         finally: db.close()
+    with writer_lock(root):
+        report['files'] = file_index.sync(root)
+    report['warnings'].extend(report['files']['warnings'])
     report['seconds'] = round(time.monotonic()-started,3)
     return report
 
@@ -422,6 +428,7 @@ def search(root, query, limit=5, project=None, archived='all', since=None, relat
         preference = db.execute("SELECT value FROM settings WHERE key='search_preference'").fetchone()
         last = db.execute("SELECT value FROM settings WHERE key='last_sync'").fetchone()
         return {'mode':'quick','strategy':strategy,'corrections':corrections,'matches':results,
+                'file_matches':file_index.search(root,query,limit,project,archived) if not since else [],
                 'last_sync':last[0] if last else None, 'preference':preference[0] if preference else 'ask',
                 'ai_fallback':'Ask before AI-assisted expansion unless the user has opted in. No model was called.'}
     finally: db.close()
@@ -481,7 +488,7 @@ def main(argv=None):
     parser.add_argument('--home',type=Path,default=codex_home(),help='Codex data directory (read only)')
     parser.add_argument('--archive',type=Path,default=data_home(),help='Private output directory')
     sub=parser.add_subparsers(dest='command',required=True)
-    p=sub.add_parser('sync');p.add_argument('--transcript',type=Path)
+    p=sub.add_parser('sync');p.add_argument('--transcript',type=Path);p.add_argument('--rebuild',action='store_true')
     p=sub.add_parser('search');p.add_argument('query');p.add_argument('--limit',type=int,default=5)
     p.add_argument('--project');p.add_argument('--archived',choices=['all','yes','no'],default='all');p.add_argument('--since')
     p.add_argument('--related',action='append',default=[])
@@ -490,9 +497,12 @@ def main(argv=None):
     p=sub.add_parser('end-day');p.add_argument('--date',default=dt.datetime.now().date().isoformat())
     p=sub.add_parser('prefer');p.add_argument('mode',choices=['ask','quick','ai'])
     sub.add_parser('hook')
+    file_index.add_parser(sub)
     args=parser.parse_args(argv);home=args.home.expanduser().resolve();root=args.archive.expanduser().resolve()
     try:
-        if args.command=='sync': result=sync(home,root,args.transcript)
+        if args.command=='sync': result=sync(home,root,args.transcript,args.rebuild)
+        elif args.command=='files':
+            with writer_lock(root):result=file_index.command(root,args)
         elif args.command=='search': result=search(root,args.query,max(1,min(args.limit,20)),args.project,args.archived,args.since,args.related)
         elif args.command=='context': result=context(root,args.task_id,args.message_id,max(0,min(args.radius,2)))
         elif args.command=='status': result=status(root)
@@ -508,7 +518,7 @@ def main(argv=None):
             path=payload.get('transcript_path')
             if not path: raise ValueError('Hook supplied no transcript_path; run sync to catch up')
             result=sync(home,root,path)
-            if result['warnings']: raise RuntimeError('; '.join(result['warnings'])[:500])
+            if result['warnings']: raise RuntimeError('; '.join(str(w) for w in result['warnings'])[:500])
             print('{}');return 0
         print(json.dumps(result,ensure_ascii=True,indent=2))
         return 1 if isinstance(result,dict) and (result.get('warnings') or result.get('sync',{}).get('warnings')) else 0
