@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+*.sqlite*
+*.jsonl
+chat-recall/
+private-data/
+benchmark-results.json
+.DS_Store
+*.tmp
+*.zip
+installation.json
+.codex-recall-managed

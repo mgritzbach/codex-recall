@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Recall"
+  short_description: "Find old tasks and keep a local text archive"
+  default_prompt: "Use $codex-recall to find a previous conversation, asking whether I prefer quick or AI-assisted search."
