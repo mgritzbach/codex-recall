@@ -1,5 +1,7 @@
 # Validation for 0.2.0
 
+GitHub Actions run 35450408858 passed all six jobs: Windows, Linux and macOS, each with Python 3.10 and 3.13. All 40 tests passed in each job.
+
 40 synthetic tests passed locally on Windows with Python 3.14, including optional file indexing, cache reuse, stale-summary invalidation, opt-in checks, task associations, filename and fuzzy matching, size limits and format extraction. Skill, plugin and package validators passed. File indexing remains off until explicitly enabled and scoped. AI summaries are implemented as a consent-based Codex workflow, not an automatic model service.
 
 # Validation for 0.1.0

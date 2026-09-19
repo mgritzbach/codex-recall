@@ -158,7 +158,7 @@ python scripts/check_package.py
 
 The repository includes a native Codex manifest, a focused skill, Python helpers, synthetic tests, GitHub Actions, MIT license, contribution guidance, security notes and a changelog. Share the source repository or its release ZIP, never your local `chat-recall` directory. There is no hosted service or publisher account embedded in this package.
 
-This release was executed on Windows with Python 3.14. The CI matrix covers Python 3.10 and 3.13 on Windows, Linux and macOS, but those remote jobs must run after publication before claiming those combinations were verified. The README is not a claim of marketplace approval.
+All 40 tests passed locally on Windows with Python 3.14 and in GitHub Actions on Windows, Linux and macOS with Python 3.10 and 3.13. The README is not a claim of marketplace approval.
 
 Design references: [OpenAI Plugins](https://github.com/openai/plugins), [Superpowers](https://github.com/obra/superpowers), and the [Codex hooks documentation](https://learn.chatgpt.com/docs/hooks). The deprecated [OpenAI skills catalog](https://github.com/openai/skills) points to the plugins repository. These informed packaging and documentation; this project does not copy their agent workflows or claim their endorsement.
 
